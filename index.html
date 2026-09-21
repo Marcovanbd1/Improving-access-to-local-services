@@ -1,55 +1,449 @@
-# apply_edits.py  |  usage: python apply_edits.py yourfile.html
-# Safe to run on any version of the page: edits already applied are skipped,
-# and it stops without writing if a find string is missing or appears twice.
-import sys
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Improving Access to Local Services · Weymouth and Portland PCN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16232B;
+    --ink-soft:#4C5A61;
+    --paper:#FFFFFF;
+    --paper-tint:#F1F4F4;
+    --line:#D9E0DF;
 
-path = sys.argv[1]
-html = open(path, encoding="utf-8").read()
+    --teal:#2A6F77;
+    --teal-tint:#E4EFEE;
+    --gold:#A9740A;
+    --gold-tint:#F4EEE0;
+    --brick:#A8452C;
+    --brick-tint:#F5E6E1;
+    --signal:#3B2E5A;
+    --signal-tint:#EAE6F1;
+  }
 
-edits = [
-    # 1. Local Social description
-    ("No login, no data collected.",
-     "No login, no personal data."),
-    # 2. Pilot clusters
-    ("<div><b>3</b><span>statistically significant clusters found</span></div>",
-     "<div><b>3</b><span>qualitative signal clusters found</span></div>"),
-    # 3. Fair day figures
-    ("<div><b>26 people</b><span>clicked through to the PCN website &mdash; its top referral source, ahead of Google</span></div>",
-     "<div><b>26 people</b><span>clicked through to the PCN website on fair day, more than from any other source that day</span></div>"),
-    ("<div><b>36 clicks</b><span>from Local Social straight into a specific support page, led by Mental Wellbeing</span></div>",
-     "<div><b>36 clicks</b><span>on fair day from Local Social straight into a specific support page, led by Mental Wellbeing</span></div>"),
-    # 4. Line for service leads (insertion after the "Scan the code" paragraph)
-    ("more interest in the data is what turns it into something a team can act on.</p>",
-     "more interest in the data is what turns it into something a team can act on.</p>\n"
-     "    <p>If you lead a local service, we would like your eyes on this picture, so you can act on your part of it.</p>"),
-    # 5. Search wording (two places)
-    ("every search and every tap becomes a small, anonymous signal",
-     "every tap and click becomes a small, anonymous signal"),
-    ("Every search and every tap is a tiny anonymous signal",
-     "Every tap and click is a tiny anonymous signal"),
-]
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
 
-# Edit 4 is an insertion, so detect it by the new sentence rather than the full new string
-already = {
-    4: "If you lead a local service, we would like your eyes on this picture",
-}
+  h1,h2,h3{
+    font-family:'Source Serif 4', Georgia, serif;
+    font-weight:600;
+    line-height:1.15;
+    margin:0 0 0.5em 0;
+    letter-spacing:-0.01em;
+  }
+  p{
+    margin:0 0 1em 0;
+    line-height:1.65;
+    font-size:1.05rem;
+    color:var(--ink-soft);
+    max-width:38em;
+  }
+  a{color:inherit;}
+  a:focus-visible, button:focus-visible{
+    outline:3px solid var(--signal);
+    outline-offset:3px;
+  }
 
-for i, (old, new) in enumerate(edits):
-    marker = already.get(i, new)
-    if marker in html:
-        print(f"Edit {i+1}: already applied, skipped")
-        continue
-    n = html.count(old)
-    if n != 1:
-        sys.exit(f"STOPPED, nothing written: edit {i+1} expected 1 match, found {n} for:\n{old[:80]}...")
-    html = html.replace(old, new)
-    print(f"Edit {i+1}: applied")
+  .rail{
+    position:fixed;
+    left:0; top:0; bottom:0;
+    width:4px;
+    background:var(--line);
+    z-index:50;
+  }
+  .rail-fill{
+    position:absolute;
+    left:0; top:0;
+    width:100%;
+    height:0%;
+    background:var(--ink);
+    transition:background 0.5s ease;
+  }
+  @media (max-width:640px){ .rail{display:none;} }
 
-out = path.replace(".html", "_edited.html")
-open(out, "w", encoding="utf-8").write(html)
-print("Saved", out)
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:0 28px;
+  }
+  @media (max-width:640px){ .wrap{padding:0 20px;} }
 
-leftovers = ["statistically", "no data collected", "search and every tap", "top referral source"]
-bad = [s for s in leftovers if s.lower() in html.lower()]
-print("Leftover old wording:", bad if bad else "none")
-print("'on fair day' count:", html.count("on fair day"), "(should be 2)")
+  section{
+    padding:96px 0;
+    position:relative;
+  }
+  section.tinted{ background:var(--tint, var(--paper-tint)); }
+  @media (max-width:640px){ section{padding:64px 0;} }
+
+  /* HERO */
+  .hero{
+    min-height:88vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding-top:64px;
+  }
+  .hero .kicker{
+    font-size:0.95rem;
+    color:var(--ink-soft);
+    margin-bottom:18px;
+    max-width:32em;
+  }
+  .hero h1{
+    font-size:clamp(2.2rem, 5.4vw, 3.6rem);
+    max-width:14em;
+  }
+  .hero .org{
+    margin-top:28px;
+    font-size:1.05rem;
+    color:var(--ink-soft);
+  }
+  .scroll-cue{
+    margin-top:56px;
+    font-size:0.85rem;
+    color:var(--ink-soft);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .scroll-cue svg{ animation:nudge 2.2s ease-in-out infinite; }
+  @keyframes nudge{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(5px);} }
+
+  /* GENERIC SECTION HEAD */
+  .eyebrow{
+    display:inline-block;
+    font-size:0.82rem;
+    font-weight:500;
+    color:var(--accent, var(--ink-soft));
+    margin-bottom:14px;
+  }
+  .eyebrow::before{
+    content:"";
+    display:inline-block;
+    width:8px; height:8px;
+    border-radius:50%;
+    background:var(--accent, var(--ink-soft));
+    margin-right:8px;
+    vertical-align:middle;
+  }
+  h2{ font-size:clamp(1.7rem, 3.4vw, 2.35rem); max-width:15em; }
+
+  .pull{
+    font-family:'Source Serif 4', Georgia, serif;
+    font-weight:500;
+    font-size:1.3rem;
+    line-height:1.45;
+    color:var(--ink);
+    max-width:26em;
+    margin:28px 0;
+  }
+
+  /* TOOL SECTIONS */
+  .stat{
+    display:inline-flex;
+    align-items:baseline;
+    gap:10px;
+    margin:18px 0 20px 0;
+    padding:10px 16px;
+    background:var(--tint2, var(--paper-tint));
+    border-radius:8px;
+  }
+  .stat b{
+    font-family:'Source Serif 4', serif;
+    font-size:1.9rem;
+    color:var(--accent, var(--ink));
+  }
+  .stat span{ font-size:0.9rem; color:var(--ink-soft); }
+
+  /* FRESHERS FAIR */
+  .fair-quote{
+    font-family:'Source Serif 4', serif;
+    font-style:italic;
+    font-weight:500;
+    color:var(--brick);
+    font-size:1.15rem;
+    margin-top:10px;
+  }
+
+  /* CONVERGENCE */
+  .converge{ text-align:left; }
+  .converge-svg-wrap{
+    margin:36px 0;
+    width:100%;
+    max-width:640px;
+  }
+  .converge-svg-wrap svg{ width:100%; height:auto; display:block; }
+  .thread{
+    stroke-width:3;
+    fill:none;
+  }
+  .thread.pending{
+    stroke-dasharray:600;
+    stroke-dashoffset:600;
+  }
+  .thread.animate{
+    stroke-dasharray:600;
+    stroke-dashoffset:0;
+    transition:stroke-dashoffset 1.6s ease;
+  }
+  .thread.t2.animate{ transition-delay:0.15s; }
+  .thread.t3.animate{ transition-delay:0.3s; }
+  @media (prefers-reduced-motion: reduce){
+    .thread.pending{ stroke-dasharray:none; stroke-dashoffset:0; }
+  }
+  .converge-legend{
+    display:flex;
+    gap:22px;
+    flex-wrap:wrap;
+    margin-top:8px;
+    font-size:0.9rem;
+    color:var(--ink-soft);
+  }
+  .converge-legend span{ display:inline-flex; align-items:center; gap:8px; }
+  .converge-legend i{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+
+  /* STAT ROW */
+  .stat-row{
+    display:flex;
+    gap:40px;
+    flex-wrap:wrap;
+    margin:32px 0 8px 0;
+  }
+  .stat-row div{ min-width:140px; max-width:220px; }
+  .stat-row b{
+    display:block;
+    font-family:'Source Serif 4', serif;
+    font-size:2.1rem;
+    color:var(--signal);
+  }
+  .fair .stat-row b{ color:var(--brick); }
+  .stat-row span{ font-size:0.88rem; color:var(--ink-soft); }
+
+  /* CTA */
+  .cta{
+    background:var(--ink);
+    color:var(--paper);
+  }
+  .cta h2{ color:var(--paper); }
+  .cta p{ color:#C7CDD1; }
+  .cta-steps{ list-style:none; margin:28px 0 0 0; padding:0; max-width:38em; }
+  .cta-steps li{
+    padding:10px 0;
+    border-top:1px solid rgba(255,255,255,0.14);
+    font-size:1.02rem;
+  }
+  .cta-steps li:first-child{ border-top:none; }
+  .cta-link{
+    display:inline-block;
+    margin-top:24px;
+    font-family:'Source Serif 4', serif;
+    font-size:1.1rem;
+    font-weight:600;
+    color:var(--paper);
+    text-decoration:none;
+    border-bottom:2px solid var(--gold);
+    padding-bottom:2px;
+  }
+
+  footer{
+    padding:40px 0 56px 0;
+    font-size:0.88rem;
+    color:var(--ink-soft);
+  }
+  footer .name{ color:var(--ink); font-weight:500; }
+</style>
+</head>
+<body>
+
+<div class="rail"><div class="rail-fill" id="railFill"></div></div>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <p class="kicker">Weymouth and Portland Primary Care Network</p>
+    <h1>Improving access to local services</h1>
+    <p class="org">An Integrated Neighbourhood Team project. Health, social care and the voluntary and community sector, working as one system around the person.</p>
+    <div class="scroll-cue">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 6L8 11L13 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Scroll to see how it works
+    </div>
+  </section>
+
+  <!-- THE GAP -->
+  <section class="tinted">
+    <span class="eyebrow">What national surveys told us</span>
+    <h2>Services were plentiful. Finding the right one was the challenge.</h2>
+    <p>We did not start by asking what services were missing. We started by reading the national survey evidence, and one finding kept turning up. People generally knew that help existed. Health services, social care, food banks and mental health support were all there in some form, including here in Weymouth and Portland.</p>
+    <p>What people lacked was confidence. Confidence in which door to try first, that the number they had was still the right one, and that asking would lead somewhere useful rather than another form or another queue.</p>
+    <p class="pull">That single sentence became the design brief for everything that follows.</p>
+  </section>
+
+  <!-- ONE ROUTE IN -->
+  <section>
+    <span class="eyebrow">Removing the friction</span>
+    <h2>One route in, whatever door someone tries first</h2>
+    <p>A person in difficulty rarely arrives with their problem already labelled. Whether the right answer sits in health, social care or the voluntary and community sector, we wanted one route in, not three separate systems each guarding its own front door.</p>
+    <p>Underneath all three sits something unglamorous: a small, deliberately manageable directory of services. Every entry earns its place and gets checked regularly. A directory that tries to hold everything ends up trusted by no one, because half of it is quietly out of date. A smaller, well kept list beats a comprehensive one that nobody quite believes.</p>
+  </section>
+
+  <!-- TOOL 1: PCN WEBSITE -->
+  <section class="tinted" style="--tint:var(--teal-tint); --accent:var(--teal);">
+    <span class="eyebrow">For anyone with time to look</span>
+    <h2>The PCN website, rebuilt</h2>
+    <div class="stat" style="--tint2:#FFFFFF;"><b style="color:var(--teal);">3 taps</b><span>of a thumb, to reach the right support</span></div>
+    <p>Built and edited in house, with no external supplier or change request in a queue. That speed lets new pages go live within days rather than months, including Living with Pain and Living with Cancer.</p>
+    <p>On a phone it lists support by category, including Crisis and Safety, Mental Wellbeing, Family and Parenting, and Community Support.</p>
+  </section>
+
+  <!-- TOOL 2: QUICKLINKS -->
+  <section style="--accent:var(--gold);">
+    <span class="eyebrow">For the conversation happening right now</span>
+    <h2>QuickLinks</h2>
+    <p>Built first for reception teams: one short page to pull up in seconds, copy a link from, or read a number off, and hand someone straight to the right service. No scrolling, no searching.</p>
+    <p>It has since spread beyond the front desk. Some clinicians now keep this page open during appointments. Its value still comes from staying short.</p>
+    <p>The page lists services for Weymouth and Portland, each with a linked phone number, plus contact details for the five GP practices.</p>
+  </section>
+
+  <!-- TOOL 3: THE LOCAL SOCIAL -->
+  <section class="tinted" style="--tint:var(--brick-tint); --accent:var(--brick);">
+    <span class="eyebrow">For the moment before someone decides to look</span>
+    <h2>The Local Social</h2>
+    <p>Asks one question, &ldquo;what&rsquo;s going on?&rdquo;, and offers five plain choices: feeling low or stressed, worried about money or food, needing help for family or kids, caring for someone, or not safe at home. No login, no personal data.</p>
+    <p>Built to travel physically to where people already are: a supermarket noticeboard, the back of a pub toilet door, a college tote bag. Same five choices, wherever someone finds them.</p>
+  </section>
+
+  <!-- FRESHERS FAIR -->
+  <section class="fair" style="--accent:var(--brick);">
+    <span class="eyebrow">First real world test</span>
+    <h2>Tote bags at the freshers&rsquo; fair</h2>
+    <p>On 9 September we handed out tote bags carrying The Local Social QR code at the college freshers&rsquo; fair. It was a small launch and a roaring success: of every stand there that day, we were the only tote bag.</p>
+    <p>A tote bag gets carried for months, on the back of a chair, on a door handle, stuffed with books. Every one of those moments is another chance for someone to find the right door before they have gone looking for it.</p>
+    <p class="fair-quote">Small, and the only one in the room.</p>
+    <div class="stat-row">
+      <div><b>&times;8</b><span>traffic spike on fair day: 100 visitors on 9 Sept vs 12 the day before</span></div>
+      <div><b>26 people</b><span>clicked through to the PCN website on fair day, more than from any other source that day</span></div>
+      <div><b>36 clicks</b><span>on fair day from Local Social straight into a specific support page, led by Mental Wellbeing</span></div>
+    </div>
+  </section>
+
+  <!-- CONVERGENCE: THE RELATIONSHIP -->
+  <section class="tinted converge" style="--tint:var(--signal-tint);">
+    <span class="eyebrow" style="--accent:var(--signal);">How the pieces fit together</span>
+    <h2>Three tools. Three doors. One growing picture.</h2>
+    <p>The PCN website, QuickLinks and The Local Social are three different routes, built for two audiences: staff at a desk or in clinic, and people and patients working things out for themselves. Each one is built to travel to wherever that person already is.</p>
+    <p>None of them ask for a name or a login. Because nothing is tied to an identity, every tap and click becomes a small, anonymous signal. On its own, each signal means little. Together, across a whole population, in real time, they start to show a pattern.</p>
+
+    <div class="converge-svg-wrap">
+      <svg viewBox="0 0 640 260" id="convergeSvg" role="img" aria-label="Three lines, for the website, QuickLinks and The Local Social, meeting at one point labelled Signals.">
+        <path class="thread t1" d="M20,40 C220,40 380,130 610,130" stroke="var(--teal)"/>
+        <path class="thread t2" d="M20,130 C220,130 380,130 610,130" stroke="var(--gold)"/>
+        <path class="thread t3" d="M20,220 C220,220 380,130 610,130" stroke="var(--brick)"/>
+        <circle cx="20" cy="40" r="5" fill="var(--teal)"/>
+        <circle cx="20" cy="130" r="5" fill="var(--gold)"/>
+        <circle cx="20" cy="220" r="5" fill="var(--brick)"/>
+        <circle cx="610" cy="130" r="7" fill="var(--signal)"/>
+        <text x="0" y="24" font-family="IBM Plex Sans" font-size="13" fill="var(--ink-soft)">Website</text>
+        <text x="0" y="150" font-family="IBM Plex Sans" font-size="13" fill="var(--ink-soft)">QuickLinks</text>
+        <text x="0" y="248" font-family="IBM Plex Sans" font-size="13" fill="var(--ink-soft)">Local Social</text>
+        <text x="536" y="112" font-family="IBM Plex Sans" font-size="13" font-weight="600" fill="var(--signal)">Signals</text>
+      </svg>
+    </div>
+    <div class="converge-legend">
+      <span><i style="background:var(--teal);"></i>More visits to the website</span>
+      <span><i style="background:var(--gold);"></i>More desks and clinics using QuickLinks</span>
+      <span><i style="background:var(--brick);"></i>More Local Social visits, wherever it travels</span>
+    </div>
+    <p class="pull" style="margin-top:32px; color:var(--signal);">Used more, all three tools sharpen the same picture: what Neighbourhood Signals sees.</p>
+  </section>
+
+  <!-- NEIGHBOURHOOD SIGNALS -->
+  <section style="--accent:var(--signal);">
+    <span class="eyebrow">The space before demand</span>
+    <h2>We can already see people navigating local services, in real time</h2>
+    <p>We call this the space before demand. Every tap and click is a tiny anonymous signal, and together they feed Neighbourhood Signals, the interpretive layer sitting underneath all three tools.</p>
+    <div class="stat-row">
+      <div><b>91 days</b><span>pilot period</span></div>
+      <div><b>3</b><span>qualitative signal clusters found</span></div>
+      <div><b>Daily</b><span>the data keeps building</span></div>
+    </div>
+    <p>Right now, one person is close to the only one looking at it. Every additional person using these three tools makes the picture sharper for whoever looks at it next.</p>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <span class="eyebrow" style="--accent:var(--gold);">Before you go</span>
+    <h2>Visit it. Share it. Ask about Signals.</h2>
+    <p>Visit The Local Social and share it with someone you care about tonight. Then ask about Neighbourhood Signals. The two feed each other: more visits sharpen the data, and more interest in the data is what turns it into something a team can act on.</p>
+    <p>If you lead a local service, we would like your eyes on this picture, so you can act on your part of it.</p>
+    <ul class="cta-steps">
+      <li>Visit thelocalsocial.org</li>
+      <li>Share it with someone tonight</li>
+      <li>Ask about Neighbourhood Signals</li>
+    </ul>
+    <a class="cta-link" href="https://thelocalsocial.org">thelocalsocial.org</a>
+  </section>
+
+  <footer>
+    <p><span class="name">Mark Winterburn</span>, Digital and Transformation Lead, Weymouth and Portland PCN</p>
+    <p>A digital inclusion project, built through an Integrated Neighbourhood Team lens.</p>
+    <p>
+      <a href="https://pcnquicklinks.org/">QuickLinks &ndash; Weymouth &amp; Portland PCN</a>
+      &nbsp;&middot;&nbsp;
+      <a href="https://weymouthandportlandpcn.co.uk/">Weymouth &amp; Portland Primary Care Network</a>
+    </p>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var fill = document.getElementById('railFill');
+  function onScroll(){
+    var doc = document.documentElement;
+    var scrolled = doc.scrollTop || document.body.scrollTop;
+    var height = (doc.scrollHeight - doc.clientHeight) || 1;
+    var pct = Math.min(100, Math.max(0, (scrolled/height)*100));
+    fill.style.height = pct + '%';
+  }
+  document.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  var svg = document.getElementById('convergeSvg');
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(svg && 'IntersectionObserver' in window && !reduceMotion){
+    var threads = svg.querySelectorAll('.thread');
+    threads.forEach(function(el){ el.classList.add('pending'); });
+    var played = false;
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting && !played){
+          played = true;
+          requestAnimationFrame(function(){
+            threads.forEach(function(el){ el.classList.add('animate'); });
+          });
+        }
+      });
+    }, {threshold:0.4});
+    obs.observe(svg);
+  }
+})();
+</script>
+
+</body>
+</html>
